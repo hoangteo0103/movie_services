@@ -47,7 +47,7 @@ message Movie {
     int32 year = 3 ; 
     string runtime = 4 ;
     repeated string genres = 5;
-    google.protobuf.Timestamp release_date = 6;
+    google.protobuf.Timestamp created_at = 6;
 }
 
 message GetMovieRequest {
