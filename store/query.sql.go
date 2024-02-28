@@ -7,6 +7,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/lib/pq"
 )
@@ -122,30 +123,24 @@ func (q *Queries) ListMovies(ctx context.Context, arg ListMoviesParams) ([]Movie
 
 const UpdateMovie = `-- name: UpdateMovie :one
 UPDATE movies 
-SET title = CASE WHEN $1::boolean THEN $2::VARCHAR(50) ELSE title END,
-    year = CASE WHEN $3::boolean THEN $4::INTEGER ELSE year END,
-    runtime = CASE WHEN $5::boolean THEN $6::INTEGER ELSE runtime END
-WHERE id = $7
+SET title = CASE WHEN $1 <> '' THEN $1::VARCHAR(50) ELSE title END,
+    year = CASE WHEN $2 <> 0 THEN $2::INTEGER ELSE year END,
+    runtime = CASE WHEN $3 > 0 THEN $3::INTEGER ELSE runtime END
+WHERE id = $4
 RETURNING id, title, year, runtime, genres, created_at, updated_at, deleted_at
 `
 
 type UpdateMovieParams struct {
-	UpdateTitle   bool   `db:"update_title" json:"update_title"`
-	Title         string `db:"title" json:"title"`
-	UpdateYear    bool   `db:"update_year" json:"update_year"`
-	Year          int32  `db:"year" json:"year"`
-	UpdateRuntime bool   `db:"update_runtime" json:"update_runtime"`
-	Runtime       int32  `db:"runtime" json:"runtime"`
-	ID            int32  `db:"id" json:"id"`
+	Title   sql.NullString `db:"title" json:"title"`
+	Year    sql.NullInt32  `db:"year" json:"year"`
+	Runtime sql.NullInt32  `db:"runtime" json:"runtime"`
+	ID      int32          `db:"id" json:"id"`
 }
 
 func (q *Queries) UpdateMovie(ctx context.Context, arg UpdateMovieParams) (Movie, error) {
 	row := q.queryRow(ctx, q.updateMovieStmt, UpdateMovie,
-		arg.UpdateTitle,
 		arg.Title,
-		arg.UpdateYear,
 		arg.Year,
-		arg.UpdateRuntime,
 		arg.Runtime,
 		arg.ID,
 	)

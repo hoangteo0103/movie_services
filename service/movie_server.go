@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"movie_services/api"
 	"movie_services/store"
 
@@ -12,6 +14,7 @@ import (
 //go:generate mockery --name IMovieServer
 type IMovieServer interface {
 	GetMovie(ctx context.Context, req *api.GetMovieRequest) (*api.Movie, error)
+	DeleteMovie(ctx context.Context, req *api.DeleteMovieRequest) (*api.DeleteMovieRequest, error)
 }
 
 type MovieServer struct {
@@ -65,6 +68,46 @@ func (s *MovieServer) CreateMovie(ctx context.Context, req *api.CreateMovieReque
 		Runtime: req.GetRuntime(),
 		Genres:  req.GetGenres(),
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &api.Movie{
+		Id:        movie.ID,
+		Title:     movie.Title,
+		Year:      movie.Year,
+		Genres:    movie.Genres,
+		CreatedAt: timestamppb.New(movie.CreatedAt),
+		UpdatedAt: timestamppb.New(movie.UpdatedAt),
+	}
+
+	return resp, nil
+}
+
+func (s *MovieServer) DeleteMovie(ctx context.Context, req *api.DeleteMovieRequest) (*api.DeleteMovieResponse, error) {
+	id := req.GetId()
+	err := s.querier.DeleteMovie(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &api.DeleteMovieResponse{
+		Message: "Movie deleted",
+	}
+
+	return resp, nil
+}
+
+func (s *MovieServer) UpdateMovie(ctx context.Context, req *api.UpdateMovieRequest) (*api.Movie, error) {
+	id := req.GetId()
+	movie, err := s.querier.UpdateMovie(ctx, store.UpdateMovieParams{
+		ID:      id,
+		Title:   sql.NullString{String: req.GetTitle(), Valid: true},
+		Year:    sql.NullInt32{Int32: req.GetYear(), Valid: true},
+		Runtime: sql.NullInt32{Int32: req.GetRuntime(), Valid: true},
+	})
+
+	fmt.Println(req.GetRuntime())
 	if err != nil {
 		return nil, err
 	}

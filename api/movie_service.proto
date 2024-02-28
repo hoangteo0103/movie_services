@@ -74,7 +74,6 @@ message UpdateMovieRequest {
     string title = 2;
     int32 year = 3;
     int32 runtime = 4;
-    repeated string genres = 5;
 }
 
 message DeleteMovieRequest {

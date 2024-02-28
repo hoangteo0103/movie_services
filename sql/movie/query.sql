@@ -13,9 +13,9 @@ INSERT INTO movies (title, year, runtime , genres) VALUES ($1, $2, $3, $4) RETUR
 
 -- name: UpdateMovie :one
 UPDATE movies 
-SET title = CASE WHEN @update_title::boolean THEN @title::VARCHAR(50) ELSE title END,
-    year = CASE WHEN @update_year::boolean THEN @year::INTEGER ELSE year END,
-    runtime = CASE WHEN @update_runtime::boolean THEN @runtime::INTEGER ELSE runtime END
+SET title = CASE WHEN @title <> '' THEN @title::VARCHAR(50) ELSE title END,
+    year = CASE WHEN @year <> 0 THEN @year::INTEGER ELSE year END,
+    runtime = CASE WHEN @runtime > 0 THEN @runtime::INTEGER ELSE runtime END
 WHERE id = @id
 RETURNING *;
 
