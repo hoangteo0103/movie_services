@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"movie_services/api"
+	"movie_services/service"
+	"movie_services/store"
 	"net"
 	"net/http"
 	"os"
@@ -11,7 +13,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -37,7 +38,6 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	defer db.Close()
 
 	// Test the connection to the database
@@ -47,7 +47,7 @@ func main() {
 		log.Println("Successfully Connected")
 	}
 
-	//	querier := store.New(db)
+	querier := store.New(db)
 
 	// [Set up tcp]
 	s := grpc.NewServer()
@@ -61,16 +61,14 @@ func main() {
 	go func() {
 		log.Println("Serving gRPC on " + os.Getenv("HOST") + ":" + os.Getenv("GRPC_PORT"))
 		if err := s.Serve(lis); err != nil {
-			log.Fatalf("Failed to serve GRPC server %v", err)
-		}
-	}()
-
-	go func() {
-		log.Println("Serving gRPC on " + os.Getenv("HOST") + ":" + os.Getenv("GRPC_PORT"))
-		if err := s.Serve(lis); err != nil {
 			log.Fatalf("Failed to serve gRPC server: %v", err)
 		}
 	}()
+
+	api.RegisterHealthCheckServiceServer(s, service.NewHealthCheckServer(&service.NewHealthCheckServerOpt{
+		Db:      db,
+		Querier: querier,
+	}))
 
 	// Test connection
 	conn, err := grpc.DialContext(
