@@ -65,7 +65,7 @@ message ListMoviesRequest {
 message CreateMovieRequest {
     string title = 1;
     int32 year = 2;
-    string runtime = 3;
+    int32 runtime = 3;
     repeated string genres = 4;
 }
 
@@ -73,7 +73,7 @@ message UpdateMovieRequest {
     int32 id = 1;
     string title = 2;
     int32 year = 3;
-    string runtime = 4;
+    int32 runtime = 4;
     repeated string genres = 5;
 }
 
