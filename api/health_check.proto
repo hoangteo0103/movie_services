@@ -1,0 +1,25 @@
+
+syntax = "proto3";
+
+package api;
+option go_package = "../api/";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service HealthCheckService {
+    rpc GetStatus(HealthCheckRequest) returns (HealthCheckStatus) {
+        option (google.api.http) = {
+            get: "/v1/healthcheck"
+        };
+    }
+
+}
+
+message HealthCheckRequest {
+}
+message HealthCheckStatus {
+    string status = 1 ;
+    string environment = 2 ; 
+    string version = 3 ;
+}
