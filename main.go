@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"flag"
 	"log"
 	"movie_services/api"
 	"movie_services/service"
@@ -28,19 +28,17 @@ func init() {
 func main() {
 	//prepare database
 
+	hostPtr := flag.String("host", "4000", "http port string")
+
+	flag.Parse()
+
 	dbHost := os.Getenv("DATABASE_HOST")
 	dbPort := os.Getenv("DATABASE_PORT")
 	dbUser := os.Getenv("DATABASE_USER")
 	dbPass := os.Getenv("DATABASE_PASS")
 	dbName := os.Getenv("DATABASE_NAME")
 	grpcPort := os.Getenv("GRPC_PORT")
-	httpPort := os.Getenv("HTTP_PORT")
-
-	if len(os.Args) > 1 {
-		arg := os.Args[1]
-		fmt.Println(arg)
-		httpPort = arg
-	}
+	httpPort := *hostPtr
 
 	connStr := "user=" + dbUser + " dbname=" + dbName + " sslmode=disable password=" + dbPass + " host=" + dbHost + " port=" + dbPort
 
