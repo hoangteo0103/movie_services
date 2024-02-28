@@ -6,6 +6,7 @@ import (
 	"movie_services/store"
 
 	"github.com/jmoiron/sqlx"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 //go:generate mockery --name IMovieServer
@@ -38,10 +39,13 @@ func (s *MovieServer) GetStatus(ctx context.Context, req *api.GetMovieRequest) (
 		return nil, err
 	}
 
-	resp:= &api.Movie{
-		Id: movie.ID,
-		Title: movie.Title,
-		Year: movie.Year,
-		Genres: movie.Genres,
-		create
+	resp := &api.Movie{
+		Id:        movie.ID,
+		Title:     movie.Title,
+		Year:      movie.Year,
+		Genres:    movie.Genres,
+		CreatedAt: timestamppb.New(movie.CreatedAt),
+	}
+
+	return resp, nil
 }
