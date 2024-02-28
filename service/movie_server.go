@@ -50,3 +50,28 @@ func (s *MovieServer) GetMovie(ctx context.Context, req *api.GetMovieRequest) (*
 
 	return resp, nil
 }
+
+func (s *MovieServer) CreateMovie(ctx context.Context, req *api.CreateMovieRequest) (*api.Movie, error) {
+	movie := &store.Movie{
+		Title:   req.GetTitle(),
+		Year:    req.GetYear(),
+		Runtime: req.GetRuntime(),
+		Genres:  req.GetGenres(),
+	}
+
+	movie, err := s.querier.CreateMovie(ctx, movie)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &api.Movie{
+		Id:        movie.ID,
+		Title:     movie.Title,
+		Year:      movie.Year,
+		Genres:    movie.Genres,
+		CreatedAt: timestamppb.New(movie.CreatedAt),
+		UpdatedAt: timestamppb.New(movie.UpdatedAt),
+	}
+
+	return resp, nil
+}
