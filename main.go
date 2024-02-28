@@ -1,15 +1,19 @@
 package main
 
 import (
+	"context"
 	"log"
+	"movie_services/api"
 	"net"
+	"net/http"
 	"os"
-	"store"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func init() {
@@ -43,7 +47,7 @@ func main() {
 		log.Println("Successfully Connected")
 	}
 
-	querier := store.New(db)
+	//	querier := store.New(db)
 
 	// [Set up tcp]
 	s := grpc.NewServer()
@@ -55,10 +59,48 @@ func main() {
 	// [grpc Server]
 	// Launch grpc Server
 	go func() {
-		log.Println("Serving gRPC on " + os.Getenv("SERVER_HOST") + ":" + os.Getenv("GRPC_PORT"))
+		log.Println("Serving gRPC on " + os.Getenv("HOST") + ":" + os.Getenv("GRPC_PORT"))
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("Failed to serve GRPC server %v", err)
 		}
 	}()
+
+	go func() {
+		log.Println("Serving gRPC on " + os.Getenv("HOST") + ":" + os.Getenv("GRPC_PORT"))
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("Failed to serve gRPC server: %v", err)
+		}
+	}()
+
+	// Test connection
+	conn, err := grpc.DialContext(
+		context.Background(),
+		os.Getenv("HOST")+":"+os.Getenv("GRPC_PORT"),
+		grpc.WithBlock(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalln("Failed to dial server:", err)
+		log.Println(conn)
+	}
+
+	// [HTTP Server conf]
+	gwmux := runtime.NewServeMux()
+
+	api.RegisterHealthCheckServiceHandler(context.Background(), gwmux, conn)
+	// err = api.RegisterUserServiceHandler(context.Background(), gwmux, conn)
+	// if err != nil {
+	// 	log.Fatalln("Failed to register gateway:", err)
+	// }
+
+	gwServer := &http.Server{
+		Addr:    ":" + os.Getenv("HTTP_PORT"),
+		Handler: gwmux,
+	}
+
+	log.Println("Serving gRPC-Gateway for REST on " + os.Getenv("HOST") + ":" + os.Getenv("HTTP_PORT"))
+	if err := gwServer.ListenAndServe(); err != nil {
+		log.Fatalf("Failed to serve gRPC-Gateway server: %v", err)
+	}
 
 }
