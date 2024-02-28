@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net"
 	"os"
 
 	"github.com/jmoiron/sqlx"
@@ -38,6 +39,11 @@ func main() {
 		log.Fatal(err)
 	} else {
 		log.Println("Successfully Connected")
+	}
+
+	lis, err := net.Listen("tcp", ":"+os.Getenv("GRPC_PORT"))
+	if err != nil {
+		log.Fatalln("Failed to listen", err)
 	}
 
 }
