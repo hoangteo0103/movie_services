@@ -78,19 +78,30 @@ func (q *Queries) GetMovie(ctx context.Context, id int32) (Movie, error) {
 
 const ListMovies = `-- name: ListMovies :many
 SELECT id, title, year, runtime, genres, created_at, updated_at, deleted_at FROM movies 
-WHERE genres && $3 
-ORDER BY runtime
+WHERE 
+    CASE cardinality($3::VARCHAR(20)[]) 
+        WHEN 0 THEN true 
+        ELSE genres && $3 
+    END  
+ORDER BY CASE WHEN $4 = 'asc' or $4 = '' THEN runtime END ASC ,
+         CASE WHEN $4 = 'desc' THEN runtime END DESC
 LIMIT $1 OFFSET $2
 `
 
 type ListMoviesParams struct {
-	Limit  int64    `db:"limit" json:"limit"`
-	Offset int64    `db:"offset" json:"offset"`
-	Genres []string `db:"genres" json:"genres"`
+	Limit  int64          `db:"limit" json:"limit"`
+	Offset int64          `db:"offset" json:"offset"`
+	Filter []string       `db:"filter" json:"filter"`
+	SortBy sql.NullString `db:"sort_by" json:"sort_by"`
 }
 
 func (q *Queries) ListMovies(ctx context.Context, arg ListMoviesParams) ([]Movie, error) {
-	rows, err := q.query(ctx, q.listMoviesStmt, ListMovies, arg.Limit, arg.Offset, pq.Array(arg.Genres))
+	rows, err := q.query(ctx, q.listMoviesStmt, ListMovies,
+		arg.Limit,
+		arg.Offset,
+		pq.Array(arg.Filter),
+		arg.SortBy,
+	)
 	if err != nil {
 		return nil, err
 	}

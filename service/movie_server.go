@@ -15,6 +15,9 @@ import (
 type IMovieServer interface {
 	GetMovie(ctx context.Context, req *api.GetMovieRequest) (*api.Movie, error)
 	DeleteMovie(ctx context.Context, req *api.DeleteMovieRequest) (*api.DeleteMovieRequest, error)
+	CreateMovie(ctx context.Context, req *api.CreateMovieRequest) (*api.Movie, error)
+	UpdateMovie(ctx context.Context, req *api.UpdateMovieRequest) (*api.Movie, error)
+	ListMovie(ctx context.Context, req *api.ListMoviesRequest) (*api.ListMoviesResponse, error)
 }
 
 type MovieServer struct {
@@ -122,4 +125,44 @@ func (s *MovieServer) UpdateMovie(ctx context.Context, req *api.UpdateMovieReque
 	}
 
 	return resp, nil
+}
+
+func (s *MovieServer) ListMovies(ctx context.Context, req *api.ListMoviesRequest) (*api.ListMoviesResponse, error) {
+
+	limit := req.GetLimit()
+	offset := req.GetOffset()
+	filter := req.GetFilter()
+	if filter == nil {
+		filter = []string{}
+	}
+
+	sort := req.GetSortBy()
+	movies, err := s.querier.ListMovies(ctx, store.ListMoviesParams{
+		Limit:  int64(limit),
+		Offset: int64(offset),
+		Filter: filter,
+		SortBy: sql.NullString{String: sort, Valid: true},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	respMovies := make([]*api.Movie, 0, len(movies))
+	for _, movie := range movies {
+		respMovies = append(respMovies, &api.Movie{
+			Id:        movie.ID,
+			Title:     movie.Title,
+			Year:      movie.Year,
+			Genres:    movie.Genres,
+			CreatedAt: timestamppb.New(movie.CreatedAt),
+			UpdatedAt: timestamppb.New(movie.UpdatedAt),
+		})
+	}
+	resp := &api.ListMoviesResponse{
+		Movies: respMovies,
+	}
+
+	return resp, nil
+
 }

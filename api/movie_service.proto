@@ -59,7 +59,7 @@ message ListMoviesRequest {
     int32 offset = 1;
     int32 limit = 2;
     string sort_by = 3;
-    string filter = 4;
+    repeated string filter = 4;
 }
 
 message CreateMovieRequest {

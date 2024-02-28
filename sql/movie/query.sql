@@ -4,9 +4,15 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListMovies :many
 SELECT * FROM movies 
-WHERE genres && $3 
-ORDER BY runtime
+WHERE 
+    CASE cardinality(@filter::VARCHAR(20)[]) 
+        WHEN 0 THEN true 
+        ELSE genres && @filter 
+    END  
+ORDER BY CASE WHEN @sort_by = 'asc' or @sort_by = '' THEN runtime END ASC ,
+         CASE WHEN @sort_by = 'desc' THEN runtime END DESC
 LIMIT $1 OFFSET $2;
+
 
 -- name: CreateMovie :one
 INSERT INTO movies (title, year, runtime , genres) VALUES ($1, $2, $3, $4) RETURNING *;
