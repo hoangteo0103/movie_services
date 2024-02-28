@@ -17,5 +17,6 @@ WHERE id = @id
 RETURNING *;
 
 -- name: DeleteMovie :exec
-DELETE FROM movies
+UPDATE movies
+SET deleted_at = now()
 WHERE id = $1;  

@@ -12,7 +12,8 @@ import (
 )
 
 const DeleteMovie = `-- name: DeleteMovie :exec
-DELETE FROM movies
+UPDATE movies
+SET deleted_at = now()
 WHERE id = $1
 `
 
@@ -22,7 +23,7 @@ func (q *Queries) DeleteMovie(ctx context.Context, id int32) error {
 }
 
 const GetMovie = `-- name: GetMovie :one
-SELECT id, title, year, runtime, genres, created_at, updated_at FROM movies 
+SELECT id, title, year, runtime, genres, created_at, updated_at, deleted_at FROM movies 
 WHERE id = $1 LIMIT 1
 `
 
@@ -37,12 +38,13 @@ func (q *Queries) GetMovie(ctx context.Context, id int32) (Movie, error) {
 		pq.Array(&i.Genres),
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const ListMovies = `-- name: ListMovies :many
-SELECT id, title, year, runtime, genres, created_at, updated_at FROM movies 
+SELECT id, title, year, runtime, genres, created_at, updated_at, deleted_at FROM movies 
 WHERE genres && $3 
 ORDER BY runtime
 LIMIT $1 OFFSET $2
@@ -71,6 +73,7 @@ func (q *Queries) ListMovies(ctx context.Context, arg ListMoviesParams) ([]Movie
 			pq.Array(&i.Genres),
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -91,7 +94,7 @@ SET title = CASE WHEN $1::boolean THEN $2::VARCHAR(50) ELSE title END,
     year = CASE WHEN $3::boolean THEN $4::INTEGER ELSE year END,
     runtime = CASE WHEN $5::boolean THEN $6::INTEGER ELSE runtime END
 WHERE id = $7
-RETURNING id, title, year, runtime, genres, created_at, updated_at
+RETURNING id, title, year, runtime, genres, created_at, updated_at, deleted_at
 `
 
 type UpdateMovieParams struct {

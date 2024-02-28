@@ -5,15 +5,17 @@
 package store
 
 import (
+	"database/sql"
 	"time"
 )
 
 type Movie struct {
-	ID        int32     `db:"id" json:"id"`
-	Title     string    `db:"title" json:"title"`
-	Year      int32     `db:"year" json:"year"`
-	Runtime   int32     `db:"runtime" json:"runtime"`
-	Genres    []string  `db:"genres" json:"genres"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	ID        int32        `db:"id" json:"id"`
+	Title     string       `db:"title" json:"title"`
+	Year      int32        `db:"year" json:"year"`
+	Runtime   int32        `db:"runtime" json:"runtime"`
+	Genres    []string     `db:"genres" json:"genres"`
+	CreatedAt time.Time    `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time    `db:"updated_at" json:"updated_at"`
+	DeletedAt sql.NullTime `db:"deleted_at" json:"deleted_at"`
 }
