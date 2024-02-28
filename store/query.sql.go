@@ -11,6 +11,27 @@ import (
 	"github.com/lib/pq"
 )
 
+const CreateMovie = `-- name: CreateMovie :exec
+INSERT INTO movies (title, year, runtime , genres) VALUES ($1, $2, $3, $4) RETURNING id, title, year, runtime, genres, created_at, updated_at, deleted_at
+`
+
+type CreateMovieParams struct {
+	Title   string   `db:"title" json:"title"`
+	Year    int32    `db:"year" json:"year"`
+	Runtime int32    `db:"runtime" json:"runtime"`
+	Genres  []string `db:"genres" json:"genres"`
+}
+
+func (q *Queries) CreateMovie(ctx context.Context, arg CreateMovieParams) error {
+	_, err := q.exec(ctx, q.createMovieStmt, CreateMovie,
+		arg.Title,
+		arg.Year,
+		arg.Runtime,
+		pq.Array(arg.Genres),
+	)
+	return err
+}
+
 const DeleteMovie = `-- name: DeleteMovie :exec
 UPDATE movies
 SET deleted_at = now()
