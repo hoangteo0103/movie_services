@@ -44,7 +44,7 @@ func main() {
 	if err := db.Ping(); err != nil {
 		log.Fatal(err)
 	} else {
-		log.Println("Successfully Connected")
+		log.Println("Successfully Connected Database!")
 	}
 
 	querier := store.New(db)
@@ -70,6 +70,11 @@ func main() {
 		Querier: querier,
 	}))
 
+	api.RegisterMovieServiceServer(s, service.NewMovieServer(&service.NewMovieServerOpt{
+		Db:      db,
+		Querier: querier,
+	}))
+
 	// Test connection
 	conn, err := grpc.DialContext(
 		context.Background(),
@@ -85,11 +90,15 @@ func main() {
 	// [HTTP Server conf]
 	gwmux := runtime.NewServeMux()
 
-	api.RegisterHealthCheckServiceHandler(context.Background(), gwmux, conn)
-	// err = api.RegisterUserServiceHandler(context.Background(), gwmux, conn)
-	// if err != nil {
-	// 	log.Fatalln("Failed to register gateway:", err)
-	// }
+	err = api.RegisterHealthCheckServiceHandler(context.Background(), gwmux, conn)
+	if err != nil {
+		log.Fatalln("Failed to register gateway:", err)
+	}
+
+	err = api.RegisterMovieServiceHandler(context.Background(), gwmux, conn)
+	if err != nil {
+		log.Fatalln("Failed to register gateway:", err)
+	}
 
 	gwServer := &http.Server{
 		Addr:    ":" + os.Getenv("HTTP_PORT"),

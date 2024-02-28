@@ -11,7 +11,7 @@ import (
 
 //go:generate mockery --name IMovieServer
 type IMovieServer interface {
-	GetStatus(ctx context.Context, req *api.GetMovieRequest) (*api.Movie, error)
+	GetMovie(ctx context.Context, req *api.GetMovieRequest) (*api.Movie, error)
 }
 
 type MovieServer struct {
@@ -32,7 +32,7 @@ func NewMovieServer(opt *NewMovieServerOpt) *MovieServer {
 	}
 }
 
-func (s *MovieServer) GetStatus(ctx context.Context, req *api.GetMovieRequest) (*api.Movie, error) {
+func (s *MovieServer) GetMovie(ctx context.Context, req *api.GetMovieRequest) (*api.Movie, error) {
 	id := req.GetId()
 	movie, err := s.querier.GetMovie(ctx, id)
 	if err != nil {
