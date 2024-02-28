@@ -45,6 +45,7 @@ func (s *MovieServer) GetMovie(ctx context.Context, req *api.GetMovieRequest) (*
 		Year:      movie.Year,
 		Genres:    movie.Genres,
 		CreatedAt: timestamppb.New(movie.CreatedAt),
+		UpdatedAt: timestamppb.New(movie.UpdatedAt),
 	}
 
 	return resp, nil

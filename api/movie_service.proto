@@ -48,6 +48,7 @@ message Movie {
     string runtime = 4 ;
     repeated string genres = 5;
     google.protobuf.Timestamp created_at = 6;
+    google.protobuf.Timestamp updated_at = 7;
 }
 
 message GetMovieRequest {
@@ -66,7 +67,6 @@ message CreateMovieRequest {
     int32 year = 2;
     string runtime = 3;
     repeated string genres = 4;
-    google.protobuf.Timestamp release_date = 5;
 }
 
 message UpdateMovieRequest {
@@ -75,7 +75,6 @@ message UpdateMovieRequest {
     int32 year = 3;
     string runtime = 4;
     repeated string genres = 5;
-    google.protobuf.Timestamp release_date = 6;
 }
 
 message DeleteMovieRequest {

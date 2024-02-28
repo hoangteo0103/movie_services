@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"movie_services/api"
 	"movie_services/service"
@@ -26,11 +27,20 @@ func init() {
 
 func main() {
 	//prepare database
+
 	dbHost := os.Getenv("DATABASE_HOST")
 	dbPort := os.Getenv("DATABASE_PORT")
 	dbUser := os.Getenv("DATABASE_USER")
 	dbPass := os.Getenv("DATABASE_PASS")
 	dbName := os.Getenv("DATABASE_NAME")
+	grpcPort := os.Getenv("GRPC_PORT")
+	httpPort := os.Getenv("HTTP_PORT")
+
+	if len(os.Args) > 1 {
+		arg := os.Args[1]
+		fmt.Println(arg)
+		httpPort = arg
+	}
 
 	connStr := "user=" + dbUser + " dbname=" + dbName + " sslmode=disable password=" + dbPass + " host=" + dbHost + " port=" + dbPort
 
@@ -51,7 +61,7 @@ func main() {
 
 	// [Set up tcp]
 	s := grpc.NewServer()
-	lis, err := net.Listen("tcp", ":"+os.Getenv("GRPC_PORT"))
+	lis, err := net.Listen("tcp", ":"+grpcPort)
 	if err != nil {
 		log.Fatalln("Failed to listen", err)
 	}
@@ -59,7 +69,7 @@ func main() {
 	// [grpc Server]
 	// Launch grpc Server
 	go func() {
-		log.Println("Serving gRPC on " + os.Getenv("HOST") + ":" + os.Getenv("GRPC_PORT"))
+		log.Println("Serving gRPC on " + os.Getenv("HOST") + ":" + grpcPort)
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("Failed to serve gRPC server: %v", err)
 		}
@@ -78,7 +88,7 @@ func main() {
 	// Test connection
 	conn, err := grpc.DialContext(
 		context.Background(),
-		os.Getenv("HOST")+":"+os.Getenv("GRPC_PORT"),
+		os.Getenv("HOST")+":"+grpcPort,
 		grpc.WithBlock(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
@@ -101,11 +111,11 @@ func main() {
 	}
 
 	gwServer := &http.Server{
-		Addr:    ":" + os.Getenv("HTTP_PORT"),
+		Addr:    ":" + httpPort,
 		Handler: gwmux,
 	}
 
-	log.Println("Serving gRPC-Gateway for REST on " + os.Getenv("HOST") + ":" + os.Getenv("HTTP_PORT"))
+	log.Println("Serving gRPC-Gateway for REST on " + os.Getenv("HOST") + ":" + httpPort)
 	if err := gwServer.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to serve gRPC-Gateway server: %v", err)
 	}
