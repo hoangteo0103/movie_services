@@ -45,7 +45,7 @@ message Movie {
     int32 id = 1;
     string title = 2 ; 
     int32 year = 3 ; 
-    string runtime = 4 ;
+    int32 runtime = 4 ;
     repeated string genres = 5;
     google.protobuf.Timestamp created_at = 6;
     google.protobuf.Timestamp updated_at = 7;
