@@ -11,7 +11,7 @@ import (
 	"github.com/lib/pq"
 )
 
-const CreateMovie = `-- name: CreateMovie :exec
+const CreateMovie = `-- name: CreateMovie :one
 INSERT INTO movies (title, year, runtime , genres) VALUES ($1, $2, $3, $4) RETURNING id, title, year, runtime, genres, created_at, updated_at, deleted_at
 `
 
@@ -22,14 +22,25 @@ type CreateMovieParams struct {
 	Genres  []string `db:"genres" json:"genres"`
 }
 
-func (q *Queries) CreateMovie(ctx context.Context, arg CreateMovieParams) error {
-	_, err := q.exec(ctx, q.createMovieStmt, CreateMovie,
+func (q *Queries) CreateMovie(ctx context.Context, arg CreateMovieParams) (Movie, error) {
+	row := q.queryRow(ctx, q.createMovieStmt, CreateMovie,
 		arg.Title,
 		arg.Year,
 		arg.Runtime,
 		pq.Array(arg.Genres),
 	)
-	return err
+	var i Movie
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Year,
+		&i.Runtime,
+		pq.Array(&i.Genres),
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
 
 const DeleteMovie = `-- name: DeleteMovie :exec
@@ -109,7 +120,7 @@ func (q *Queries) ListMovies(ctx context.Context, arg ListMoviesParams) ([]Movie
 	return items, nil
 }
 
-const UpdateMovie = `-- name: UpdateMovie :exec
+const UpdateMovie = `-- name: UpdateMovie :one
 UPDATE movies 
 SET title = CASE WHEN $1::boolean THEN $2::VARCHAR(50) ELSE title END,
     year = CASE WHEN $3::boolean THEN $4::INTEGER ELSE year END,
@@ -128,8 +139,8 @@ type UpdateMovieParams struct {
 	ID            int32  `db:"id" json:"id"`
 }
 
-func (q *Queries) UpdateMovie(ctx context.Context, arg UpdateMovieParams) error {
-	_, err := q.exec(ctx, q.updateMovieStmt, UpdateMovie,
+func (q *Queries) UpdateMovie(ctx context.Context, arg UpdateMovieParams) (Movie, error) {
+	row := q.queryRow(ctx, q.updateMovieStmt, UpdateMovie,
 		arg.UpdateTitle,
 		arg.Title,
 		arg.UpdateYear,
@@ -138,5 +149,16 @@ func (q *Queries) UpdateMovie(ctx context.Context, arg UpdateMovieParams) error 
 		arg.Runtime,
 		arg.ID,
 	)
-	return err
+	var i Movie
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Year,
+		&i.Runtime,
+		pq.Array(&i.Genres),
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }

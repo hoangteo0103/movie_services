@@ -52,14 +52,19 @@ func (s *MovieServer) GetMovie(ctx context.Context, req *api.GetMovieRequest) (*
 }
 
 func (s *MovieServer) CreateMovie(ctx context.Context, req *api.CreateMovieRequest) (*api.Movie, error) {
-	movie := &store.Movie{
+	movie := store.Movie{
 		Title:   req.GetTitle(),
 		Year:    req.GetYear(),
 		Runtime: req.GetRuntime(),
 		Genres:  req.GetGenres(),
 	}
 
-	movie, err := s.querier.CreateMovie(ctx, movie)
+	movie, err := s.querier.CreateMovie(ctx, store.CreateMovieParams{
+		Title:   req.GetTitle(),
+		Year:    req.GetYear(),
+		Runtime: req.GetRuntime(),
+		Genres:  req.GetGenres(),
+	})
 	if err != nil {
 		return nil, err
 	}
