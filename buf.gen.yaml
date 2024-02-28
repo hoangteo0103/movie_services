@@ -12,3 +12,7 @@ plugins:
     out: .
     opt:
       - paths=source_relative
+  - plugin: openapiv2
+    out: .
+    opt:
+      - grpc_api_configuration=api/gw_mapping.yaml
