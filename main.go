@@ -9,11 +9,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const (
-	defaultTimeout = 30
-	defaultAddress = ":4000"
-)
-
 func init() {
 	err := godotenv.Load()
 	if err != nil {
